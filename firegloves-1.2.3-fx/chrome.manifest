@@ -1,0 +1,5 @@
+content firegloves chrome/content/
+resource fgmodules chrome/content/
+overlay chrome://browser/content/browser.xul chrome://firegloves/content/firefoxOverlay.xul
+skin firegloves	classic/1.0	chrome/skin/
+style chrome://global/content/customizeToolbar.xul chrome://firegloves/skin/toolbar-button.css

@@ -1,0 +1,428 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+ 
+<prefwindow id="firegloves-prefs"
+     title="FireGloves options"
+     xmlns:html="http://www.w3.org/1999/xhtml"
+     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+     
+<html:style>
+    .help {
+        font-family: Trebuchet MS;
+        color: -moz-nativehyperlinktext;
+        text-shadow: 0 0 3px white;
+        box-shadow: 0 0 2px -moz-ButtonDefault;
+        padding: 0px 6px;
+        border-radius: 7px;
+        margin-left: 5px;
+    }
+    
+    .rlabel {
+        text-align: right;
+    }
+    
+    .addonName {
+        font-weight: bold;
+        margin: 15px;
+    }
+    
+    .aboutbox {
+        margin-top: 30px;
+        padding-top: 15px;
+    }
+    
+    .aboutInfo {
+        margin-top: 15px;
+        padding: 10px;
+        text-align: justify;
+        max-width: 350px;
+    }
+</html:style>
+ 
+<prefpane id="fireGlovesSettings" label="FireGloves settings">
+  <preferences>
+    <preference id="pref_randomMode" name="extensions.firegloves.randomMode" type="bool"/>
+    <preference id="pref_screenResolution" name="extensions.firegloves.screenResolution" type="string"/>
+    <preference id="pref_platform" name="extensions.firegloves.platform" type="string"/>
+    <preference id="pref_language" name="extensions.firegloves.language" type="string"/>
+    <preference id="pref_timeZone" name="extensions.firegloves.timeZone" type="string"/>
+    <preference id="pref_userAgent" name="extensions.firegloves.userAgent" type="string"/>
+    <preference id="pref_acceptLanguage" name="extensions.firegloves.acceptLanguage" type="string"/>
+    <preference id="pref_appVersion" name="extensions.firegloves.appVersion" type="string"/>
+    <preference id="pref_fontsDisabled" name="extensions.firegloves.fontsDisabled" type="bool"/>
+    <preference id="pref_pluginsDisabled" name="extensions.firegloves.pluginsDisabled" type="bool"/>
+    <!--
+    <preference id="pref_mimeTypesDisabled" name="extensions.firegloves.mimeTypesDisabled" type="bool"/
+    -->
+    <!-- 1.2 -->
+    <preference id="pref_fgonauto" name="extensions.firegloves.fgonauto" type="bool"/>
+    <preference id="pref_fontCacheMax" name="extensions.firegloves.fontCacheMax" type="int"/>
+    <preference id="pref_fakeOffset" name="extensions.firegloves.fakeOffset" type="bool"/>
+    <preference id="pref_fakeOffsetTimeout" name="extensions.firegloves.fakeOffsetTimeout" type="int"/>
+    <preference id="pref_fakeOffsetAfter" name="extensions.firegloves.fakeOffsetAfter" type="int"/>
+    <!-- related Firefox settings -->
+    <preference id="pref_domStorageEnabled" name="dom.storage.enabled" type="bool"/>
+    <preference id="pref_cookieBehavior" name="network.cookie.cookieBehavior" type="int"/>
+    <preference id="pref_useCache" name="network.http.use-cache" type="bool"/>
+    <preference id="pref_offlineCache" name="browser.cache.offline.enable" type="bool"/>
+    <preference id="pref_doNotTrack" name="privacy.donottrackheader.enabled" type="bool"/>
+    <preference id="pref_sanitizeOnShutdown" name="privacy.sanitize.sanitizeOnShutdown" type="bool"/>
+    <preference id="pref_sanitizeCache" name="privacy.clearOnShutdown.cache" type="bool"/>
+    <preference id="pref_sanitizeCookies" name="privacy.clearOnShutdown.cookies" type="bool"/>
+    <preference id="pref_sanitizeSessions" name="privacy.clearOnShutdown.sessions" type="bool"/>
+    <preference id="pref_sanitizeOfflineApps" name="privacy.clearOnShutdown.offlineApps" type="bool"/>
+    <!-- 1.1 -->
+    <preference id="pref_fgonprivate" name="extensions.firegloves.fgonprivate" type="bool"/>
+    <preference id="pref_fgalert" name="extensions.firegloves.fgalert" type="bool"/>
+    <!-- Tor settings - not implemented yet  -->
+    <!-- 
+    <preference id="pref_maxFontCount" name="browser.display.max_font_count" type="int"/>
+    <preference id="pref_maxFontAttempts" name="browser.display.max_font_attempts" type="int"/>
+    -->
+  </preferences>
+  
+  <script>
+    
+    var iPrefs = function(prefBranch) {
+        var Cc = Components.classes;
+        var Ci = Components.interfaces;
+		this.prefs = null;
+		this.prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).getBranch(prefBranch);
+		this.prefs.QueryInterface(Components.interfaces.nsIPrefBranch2);
+            
+		this.clearPref = function(pref) {
+			this.prefs.clearUserPref(pref);
+		};
+		this.setPrefC = function(pref, value) {
+			this.prefs.setCharPref(pref, value);
+		};
+        this.setPrefI = function(pref, value) {
+			this.prefs.setIntPref(pref, value);
+		};
+        this.getPrefC = function(pref) {
+            return this.prefs.getCharPref(pref);
+        };
+        this.getPrefI = function(pref) {
+            return this.prefs.getIntPref(pref);
+        };
+        this.getPrefType = function(pref) {
+            return this.prefs.getPrefType(pref);
+        }
+	};
+    
+    
+	function toggle(tg, cmd_id) {
+		if (tg) {
+			document.getElementById(cmd_id).setAttribute('disabled','true');
+		} else {
+			document.getElementById(cmd_id).removeAttribute('disabled');
+		}
+	}
+    
+	window.onload = function() {
+		toggle(document.getElementById('randomMode').checked, 'cmd_hide');
+		toggle(!document.getElementById('fgonprivate').checked, 'cmd_hide_fgalert');
+        toggle(!document.getElementById('sanitizeOnShutdown').checked, 'cmd_hide_sanitizeOnShutdown');
+        toggle(!document.getElementById('fakeOffset').checked, 'cmd_hide_fakeOffset');
+        toggle(!document.getElementById('fontsDisabled').checked, 'cmd_hide_fontsDisabled');
+        
+        loadPrefs();
+        
+        getAddonNameVer(function(addon) {
+            document.getElementById('addonName').value = addon.name + " " + addon.version;
+        });
+	};
+    
+    function loadPrefs() {
+        var p = new iPrefs('browser.display.');
+        
+        var v = p.getPrefI('use_document_fonts') == 1;
+        document.getElementById('useDocumentFonts').checked = v;
+
+        /* // TOR options - not implemented yet
+        
+        if (p.getPrefType('use_only_generic_fonts') == 0) {
+            toggle(true, 'cmd_hide_useOnlyGenericFonts');
+        } else {
+            v = p.getPrefI('use_document_fonts') == 1;
+            document.getElementById('useOnlyGenericFonts').checked = v;
+        }
+        
+        if (p.getPrefType('max_font_count') == 0) {
+            toggle(true, 'cmd_hide_maxFontCount');
+        }
+        
+        if (p.getPrefType('max_font_attempts') == 0) {
+            toggle(true, 'cmd_hide_maxFontAttempts');
+        }
+        
+        */
+    }
+    
+    function useDocumentFonts_command() {
+        var v = document.getElementById('useDocumentFonts').checked ? 1 : 0;
+        new iPrefs('browser.display.').setPrefI('use_document_fonts', v);
+    }
+    
+    function useOnlyGenericFonts_command() {
+        var v = document.getElementById('useOnlyGenericFonts').checked ? 1 : 0;
+        new iPrefs('browser.display.').setPrefI('use_only_generic_fonts', v);
+    }
+    
+    function getAddonNameVer(callback) {
+        Components.utils.import("resource://gre/modules/AddonManager.jsm");
+        AddonManager.getAddonByID('firegloves@fingerprint.pet-portal.eu', callback);
+    }
+    
+  </script>
+  <command id="cmd_hide"/>
+  <command id="cmd_hide_fontsDisabled"/>
+  <command id="cmd_hide_fakeOffset"/>
+  <command id="cmd_hide_useOnlyGenericFonts"/>
+  <command id="cmd_hide_maxFontCount"/>
+  <command id="cmd_hide_maxFontAttempts"/>
+  <command id="cmd_hide_fgalert"/>
+  <command id="cmd_hide_sanitizeOnShutdown"/>
+  
+  <tabbox id="FGSettings">
+  
+  <tabs>
+    <tab label="General settings"/>
+    <tab label="Cloak settings"/>
+    <tab label="Firefox privacy settings"/>
+  </tabs>
+  
+  <tabpanels>
+  
+  
+  <!-- FireGloves settings -->
+  <tabpanel orient="vertical">
+  
+	  <hbox align="center">
+		<checkbox preference="pref_fgonauto" id="fgonauto" label="Default on"/>
+        <label value="?" class="help" tooltip="fgonautoTooltip"/>
+        <tooltip id="fgonautoTooltip">
+          <label>Enable FireGloves when starting Firefox or opening a new tab.</label>
+        </tooltip>
+	  </hbox>
+      <hbox align="center">
+		<checkbox preference="pref_fgonprivate" id="fgonprivate" label="Auto enable in private browsing mode"/>
+	  </hbox>
+      <!--
+      <hbox align="center">
+		<checkbox preference="pref_fgalert" id="fgalert" label="Reminder alert window" command="cmd_hide_fgalert"/>
+	  </hbox>
+      -->
+      <groupbox align="center" class="aboutbox">
+        <caption label="About"/>
+        <image src='chrome://firegloves/skin/fg-logo-128.png' width='128' height='128'/>
+        <label id="addonName" class="addonName" value="Loading version..."/>
+        <grid flex="1">
+          <columns>
+            <column/><column/>
+          </columns>
+          <rows>
+            <row>
+              <label value="Support:" class="rlabel"/>
+              <label href="mailto:fingerprint@pet-portal.eu" class="text-link" value="fingerprint@pet-portal.eu"/>
+            </row>
+            <row>
+              <label value="Homepage:" class="rlabel"/>
+              <label href="http://fingerprint.pet-portal.eu" class="text-link" value="http://fingerprint.pet-portal.eu"/>
+            </row>
+          </rows>
+        </grid>
+        <vbox>
+          <html:div class="aboutInfo">
+            FireGloves is an experimental Firefox addon to prove that the web can be browsed safely (regarding a significant type of fingerprinting attacks) without a significant decrease in the user experience.
+            However, if you want to use it regularly for enhancing your privacy, please consider using other privacy enhancing technologies, such as TOR, Ghostery, or others.
+          </html:div>
+        </vbox>
+      </groupbox>
+      
+  </tabpanel>
+  
+  
+  <!-- Functional settings -->
+  <tabpanel orient="vertical">
+  
+  <hbox align="center">
+    <checkbox preference="pref_randomMode" id="randomMode" label="Random mode" oncommand="toggle(this.checked, 'cmd_hide')"/>
+  </hbox>
+  <!-- Manual mode group -->
+  <groupbox id="manual_box" flex="1" command="cmd_hide">
+	<caption label="Manual mode properties"/>
+	  <hbox align="center">
+		<label control="screenResolution" value="Screen resolution: " command="cmd_hide"/>
+		<textbox preference="pref_screenResolution" id="screenResolution" flex="1" command="cmd_hide"/>
+	  </hbox>
+	  <hbox align="center">
+		<label control="platform" value="Platform: " command="cmd_hide"/>
+		<textbox preference="pref_platform" id="platform" flex="1" command="cmd_hide"/>
+	  </hbox>
+	  <hbox align="center">
+		<label control="language" value="Language code: " command="cmd_hide"/>
+		<textbox preference="pref_language" id="language" flex="1" command="cmd_hide"/>
+	  </hbox>
+	  <hbox align="center">
+		<label control="timeZone" value="Time zone: " command="cmd_hide"/>
+		<textbox preference="pref_timeZone" id="timeZone" flex="1" command="cmd_hide" type="number" min="-11" max="11"/>
+	  </hbox>
+  </groupbox>
+  
+  <!-- Only manual -->
+  <groupbox>
+    <caption label="Browser strings"/>
+	  <hbox align="center">
+		<label control="userAgent" value="User agent string: "/>
+		<textbox preference="pref_userAgent" id="userAgent" flex="1"/>
+	  </hbox>
+	  <hbox align="center">
+		<label control="acceptLanguage" value="Accept language: "/>
+		<textbox preference="pref_acceptLanguage" id="acceptLanguage" flex="1"/>
+	  </hbox>
+      <hbox align="center">
+		<label control="appVersion" value="Version info: "/>
+		<textbox preference="pref_appVersion" id="appVersion" flex="1"/>
+	  </hbox>
+  </groupbox>
+  
+  <!-- Collections group -->
+  <groupbox>
+    <caption label="Collections"/>
+	  <hbox align="center">
+		<checkbox preference="pref_pluginsDisabled" id="pluginsDisabled" label="Disable Plugin and mimeType lists"/>
+        <label value="?" class="help" tooltip="pluginsDisabledTooltip"/>
+        <tooltip id="pluginsDisabledTooltip">
+          <label>Indicates empty plugin and mimeType lists, but plugins will continue to work, i.e. will not be disabled.</label>
+        </tooltip>
+	  </hbox>
+      <!--
+	  <hbox align="center">
+		<checkbox preference="pref_mimeTypesDisabled" id="mimeTypesDisabled" label="Disable Mime Types"/>
+	  </hbox>
+      -->
+  </groupbox>
+  
+  <!-- Fonts group -->
+  <groupbox>
+    <caption label="Fonts"/>
+	  <hbox align="center">
+		<checkbox id="useDocumentFonts" label="Use Document Fonts" oncommand="useDocumentFonts_command()"/>
+        <label value="?" class="help" tooltip="useDocumentFontsTooltip"/>
+        <tooltip id="useDocumentFontsTooltip">
+          <label>It is a setting in Firefox which controls the use of fonts within documents.</label>
+          <label>When turned off, only a small set of predefined fonts can be used, which protects against font detection-based identification, but harms user experience.</label>
+        </tooltip>
+	  </hbox>
+      <hbox align="center">
+		<checkbox preference="pref_fontsDisabled" id="fontsDisabled" label="Limit fonts per tab" oncommand="toggle(!this.checked, 'cmd_hide_fontsDisabled')"/>
+        <label value="?" class="help" tooltip="fontsDisabledTooltip"/>
+        <tooltip id="fontsDisabledTooltip">
+          <label>Limits the number of usable fonts per session per tab.</label>
+          <label>It creates a list of fonts used by the web page in their order of application, and discards further fonts when the list is full. An attempt to apply a font that did not fit onto the list will trigger the use of the first font. This restriction is enforced on JavaScript, CSS stylesheets, and HTML inline styles, too.</label>
+        </tooltip>
+	  </hbox>
+      <hbox align="center">
+		<label control="fontCacheMax" value="Number of allowed fonts per tab: " command="cmd_hide_fontsDisabled"/>
+		<textbox preference="pref_fontCacheMax" id="fontCacheMax" flex="1" command="cmd_hide_fontsDisabled" type="number" min="0" />
+	  </hbox>
+      <hbox align="center">
+		<checkbox preference="pref_fakeOffset" id="fakeOffset" label="Limit offset value queries" oncommand="toggle(!this.checked, 'cmd_hide_fakeOffset')"/>
+        <label value="?" class="help" tooltip="fakeOffsetTooltip"/>
+        <tooltip id="fakeOffsetTooltip">
+          <label>The JavaScript-based font detection algorithm determines if a font is installed based on the offsetWidth and offsetHeight values; therefore, it is necessary to limit the number of queries for these attributes.</label>
+          <label>This countermeasure works as follows: after reaching the limit, random values are returned for a given time, thereby deceiving algorithms based on exhaustive search. (While the timer is running, every further query resets it.) For increased security, it is recommended to limit the number of fonts, too.</label>
+        </tooltip>
+	  </hbox>
+      <hbox align="center">
+		<label control="fakeOffsetAfter" value="Allowed offset value queries: " command="cmd_hide_fakeOffset"/>
+		<textbox preference="pref_fakeOffsetAfter" id="fakeOffsetAfter" flex="1" command="cmd_hide_fakeOffset" type="number" min="0" />
+	  </hbox>
+      <hbox align="center">
+		<label control="fakeOffsetTimeout" value="Fake offset timeout (in milliseconds): " command="cmd_hide_fakeOffset"/>
+		<textbox preference="pref_fakeOffsetTimeout" id="fakeOffsetTimeout" flex="1" command="cmd_hide_fakeOffset" type="number" min="10" />
+	  </hbox>
+  </groupbox>
+  
+  </tabpanel>
+  
+  
+  <!-- Firefox settings -->
+  <tabpanel orient="vertical">
+      <hbox align="center" style="margin-bottom: 10px;">
+        <label>These settings can be found on the Preferences panel of Firefox,<html:br/>but we decided to put them here for easier access.</label>
+      </hbox>
+      <hbox align="center">
+        <checkbox preference="pref_doNotTrack" id="doNotTrack" label="Enable Do Not Track header"/>
+      </hbox>
+      <hbox align="center">
+        <checkbox preference="pref_domStorageEnabled" id="domStorageEnabled" label="Enable DOM Storage"/>
+      </hbox>
+      <hbox align="center">
+        <checkbox preference="pref_useCache" id="useCache" label="Use HTTP(S) Cache"/>
+        <label value="?" class="help" tooltip="useCacheTooltip"/>
+        <tooltip id="useCacheTooltip">
+          <label>Enables on disk and ram caching, although these may pose a privacy risk.</label>
+        </tooltip>
+      </hbox>
+      <hbox align="center">
+        <checkbox preference="pref_offlineCache" id="offlineCache" label="Enable offline Cache"/>
+      </hbox>
+      <hbox align="center">
+        <label control="cookieBehavior" value="Cookie behavior: "/>
+        <menulist preference="pref_cookieBehavior" id="cookieBehavior">
+          <menupopup>
+            <menuitem label="All cookies are allowed." value="0"/>
+            <menuitem label="No third-party cookies are allowed." value="1"/>
+            <menuitem label="No cookies are allowed." value="2"/>
+          </menupopup>
+        </menulist>
+      </hbox>
+      <groupbox>
+        <caption>
+      <!--hbox align="center"-->
+        <checkbox preference="pref_sanitizeOnShutdown" id="sanitizeOnShutdown" label="Clear on shutdown" oncommand="toggle(!this.checked, 'cmd_hide_sanitizeOnShutdown')"/>
+      <!--/hbox-->
+        </caption>
+        <hbox align="center">
+          <checkbox preference="pref_sanitizeCache" id="sanitizeCache" label="Cache" command="cmd_hide_sanitizeOnShutdown"/>
+        </hbox>
+        <hbox align="center">
+          <checkbox preference="pref_sanitizeCookies" id="sanitizeCookies" label="Cookies" command="cmd_hide_sanitizeOnShutdown"/>
+        </hbox>
+        <hbox align="center">
+          <checkbox preference="pref_sanitizeSessions" id="sanitizeSessions" label="Sessions" command="cmd_hide_sanitizeOnShutdown"/>
+        </hbox>
+        <hbox align="center">
+          <checkbox preference="pref_sanitizeOfflineApps" id="sanitizeOfflineApps" label="Offline apps" command="cmd_hide_sanitizeOnShutdown"/>
+        </hbox>
+      </groupbox>
+  
+  </tabpanel>
+  
+  </tabpanels>
+  
+  </tabbox>
+  
+  <!-- Torbrowser only - not implemented yet -->
+  <!--
+  <groupbox>
+    <caption label="Torbrowser only"/>
+      <hbox align="center">
+		<checkbox id="useOnlyGenericFonts" label="Use Only Generic Fonts" oncommand="useOnlyGenericFonts_command()" command="cmd_hide_useOnlyGenericFonts"/>
+	  </hbox>
+      <hbox align="center">
+		<label control="maxFontCount" value="Max Font Count: " command="cmd_hide_maxFontCount"/>
+		<textbox preference="pref_maxFontCount" id="maxFontCount" flex="1" command="cmd_hide_maxFontCount" type="number" min="0" max="999"/>
+	  </hbox>
+      <hbox align="center">
+		<label control="maxFontAttempts" value="Max Font Attempts: " command="cmd_hide_maxFontAttempts"/>
+		<textbox preference="pref_maxFontAttempts" id="maxFontAttempts" flex="1" command="cmd_hide_maxFontAttempts" type="number" min="0" max="999"/>
+	  </hbox>
+  </groupbox>
+  -->
+  
+</prefpane>
+ 
+</prefwindow>

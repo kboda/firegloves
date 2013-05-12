@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://firegloves/skin/toolbar-button.css" type="text/css"?>
+
+<overlay id="firegloves"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/x-javascript" src="chrome://firegloves/content/overlay.js"/>
+  <!--
+  <statusbar id="status-bar">
+	<statusbarpanel id="jsbStatus" label="FireGloves"/>
+  </statusbar>
+  -->
+  <toolbarpalette id="BrowserToolbarPalette">
+    <toolbarbutton type="menu-button" id="firegloves-toolbar-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+      tooltiptext="Toggle FireGloves"
+      label="Toggle FireGloves"
+      oncommand="FireGloves.toggle();">
+        <menupopup>
+          <menuitem id="firegloves-toolbar-showstats" label="Show tab stats"
+            oncommand="FireGloves.showStats(); event.stopPropagation();" />
+          <menuitem id="firegloves-toolbar-clearcookies" label="Clear cookies"
+            oncommand="FireGloves.clearCookies(); event.stopPropagation();" />
+          <menuitem id="firegloves-toolbar-clearfontcache" label="Clear font list"
+            oncommand="FireGloves.clearFontCache(); event.stopPropagation();" />
+          <menuitem id="firegloves-toolbar-openprefs" label="Open preferences"
+            oncommand="FireGloves.openPreferences(); event.stopPropagation();" />
+        </menupopup>
+    </toolbarbutton>
+  </toolbarpalette>
+</overlay>

@@ -1,0 +1,26 @@
+
+#firegloves-toolbar-button,
+window:not([active="true"]) #firegloves-toolbar-button,
+toolbar[iconsize="small"] #firegloves-toolbar-button {
+  list-style-image: url("chrome://firegloves/skin/toolbar-icon.png");
+}
+
+#firegloves-toolbar-button .toolbarbutton-icon,
+window:not([active="true"]) #firegloves-toolbar-button .toolbarbutton-icon,
+toolbar[iconsize="small"] #firegloves-toolbar-button .toolbarbutton-icon {
+  filter: none;
+  opacity: 1.0;
+}
+
+#firegloves-toolbar-button[fireglovesOn="false"] .toolbarbutton-icon,
+window:not([active="true"]) #firegloves-toolbar-button[fireglovesOn="false"] .toolbarbutton-icon,
+toolbar[iconsize="small"] #firegloves-toolbar-button[fireglovesOn="false"] .toolbarbutton-icon {
+  filter: url("chrome://mozapps/skin/extensions/extensions.svg#greyscale");
+  opacity: 0.5;
+}
+
+#firegloves-toolbar-button .toolbarbutton-icon {
+  margin: 0px !important;
+  width: auto !important;
+  height: auto !important;
+}

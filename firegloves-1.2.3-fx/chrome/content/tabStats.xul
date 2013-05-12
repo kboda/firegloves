@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<dialog id="donothing" title="FireGloves tab statistics"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  buttons="accept">
+  
+  <grid flex="1">
+
+      <columns>
+        <column/>
+        <column flex="1"/>
+      </columns>
+
+      <rows id="stats-table" style="min-width: 200px;">
+      </rows>
+
+  </grid>
+  
+  <script>
+    var FGS = window.arguments[0];
+    
+    var labels = {
+        userAgent: "User agent",
+        appVersion: "Version info",
+        platform: "Platform",
+        language: "Language",
+        buildID: "Build info",
+        plugins: "Plugins",
+        fontFamily: "Font family",
+        offsetValue: "Offset values",
+        HTMLmanip: "HTML manipulation",
+        timeZone: "Timezone",
+        iframeWindow: "IFrame",
+        timing: "Performance timing",
+        screenRes: "Screen resolution",
+        fontCache: "Font cache"
+    };
+    
+    function createItem(aLabel, aValue) {
+        const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+        var row = document.createElementNS(XUL_NS, "row");
+        var label = document.createElementNS(XUL_NS, "label");
+        label.setAttribute("value", aLabel + ':');
+        row.appendChild(label);
+        if (typeof aValue == 'object') {
+            var vbox = document.createElementNS(XUL_NS, "vbox");
+            for (var a = 0, i = 1; aValue[a]; a++, i++) {
+                var value = document.createElementNS(XUL_NS, "label");
+                value.setAttribute("value", i + ") " + aValue[a]);
+                vbox.appendChild(value);
+            }
+            row.appendChild(vbox);
+        } else {
+            var value = document.createElementNS(XUL_NS, "label");
+            value.setAttribute("value", aValue);
+            row.appendChild(value);
+        }
+        return row;
+    }
+    
+    function createLabel(aLabel) {
+        const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+        var row = document.createElementNS(XUL_NS, "row");
+        var label = document.createElementNS(XUL_NS, "label");
+        label.setAttribute("value", aLabel);
+        row.appendChild(label);
+        return row;
+    }
+    
+    function isObjEmpty(obj) {
+        for (var p in obj) return false;
+        return true;
+    }
+    
+    var rows = document.getElementById('stats-table');
+    if (isObjEmpty(FGS)) rows.appendChild(createLabel("Query counters are empty."));
+    for (var p in FGS) {
+        rows.appendChild(createItem(labels[p], FGS[p]));
+    }
+    
+  </script>
+  
+</dialog>
